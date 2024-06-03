@@ -2,14 +2,9 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
-use std::time::{SystemTime};
+//use std::time::{SystemTime};
 use std::f32;
-use bevy::render::render_resource::PrimitiveTopology::LineStrip;
 
-struct LineData{
-    slope: f32,
-    intercept: f32,
-}
 #[derive(Resource)]
 struct Values{
     slope: f32,
@@ -26,23 +21,17 @@ struct Point{
 
 fn main() {
 
+
+    //this is the input data
     let x_values = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-    //let y_values = vec![10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0];
     let y_values = vec![7.0, 4.0, 3.0, 6.0, 3.0, 4.0, 2.0];
 
+    //panic if the input data is not the same length
     assert!(x_values.len() == y_values.len());
-
-    let len = x_values.len();
-
-    let now = SystemTime::now();
 
     let slope = get_slope(&x_values, & y_values);
 
     let intercept = get_intercept(&x_values, &y_values, slope);
-
-    let after = now.elapsed().expect("time thing failed");
-
-    println!("time: {}", after.as_nanos());
 
     println!("Slope: {} intercept {}", slope, intercept);
 
@@ -50,9 +39,10 @@ fn main() {
     .add_plugins(DefaultPlugins)
     .insert_resource(Values{x_values: x_values, y_values: y_values,
                      slope: slope, intercept: intercept  })
-    .add_systems(Startup, (make_graph.before(test), test))
+    .add_systems(Startup, (make_graph.before(make_spheres), make_spheres))
     .run();
 }
+
 
 fn get_intercept(x_values: &Vec<f32>, y_values: &Vec<f32>, slope: f32) -> f32{
 
@@ -105,6 +95,8 @@ fn sum(values: &Vec<f32>) -> f32{
     sum
 }
 
+//returns a vector that contains the difference between the 
+//values and the mean: values[i]-mean
 fn mean_difference(values: &Vec<f32>) -> Vec<f32>{
 
     let mut mean_difference_values: Vec<f32> = Vec::new();
@@ -153,8 +145,7 @@ fn make_graph(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut mate
 
     commands.spawn(Camera2dBundle::default());
 
-    println!("first");
-
+    //makes the bottom line of graph
     commands.spawn(MaterialMesh2dBundle {
         mesh: line.clone(),
         material: materials.add(color),
@@ -166,6 +157,8 @@ fn make_graph(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut mate
         
         ..default()
     });
+
+    //makes the left side of the graph
     commands.spawn(MaterialMesh2dBundle {
         mesh: line.clone(),
         material: materials.add(color),
@@ -177,26 +170,22 @@ fn make_graph(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut mate
         ..default()
     }); 
 
+    //get data neccessary to place regression line
     let result = get_line_data(&values);
 
+    //x_start and y_start describe where the left end of the line is
+    //tracking this is important because we need to shift the line
     let x_start = result.0;
     let y_start = result.1;
     let angle = result.2;
     let line_length = result.3;
 
-    let slope = values.slope;
-
     let y_scale = get_scale(&values.y_values);
     
-    
+    //shift values to move the line into position
     let x_shift = -300.0 - x_start;
     let y_shift = (-300.0+values.intercept*y_scale)-y_start;
 
-
-    // println!("angle {}", angle);
-    println!("y_start {}", y_start);
-    println!("intecept {}", values.intercept*y_scale);
-    println!("y_shift {}", y_shift);
 
     line = Mesh2dHandle(meshes.add(Rectangle::new(line_length, 5.0)));
 
@@ -238,27 +227,19 @@ fn get_line_data(values: &Values) -> (f32, f32, f32, f32){
 
     println!("y distance {}", y_distance);
 
+    //use a^2 + b^2 = c^2 to solve for the length of the line
     let line_length = (x_distance.powf(2.0) + y_distance.powf(2.0)).sqrt();
 
-    let mut angle;
-    let mut start_y;
-    let mut start_x;
+    let angle;
+    let start_y;
+    let start_x;
 
     let half_of_line = line_length/2.0;
 
-    if slope > 0.0{
-        angle = (y_distance/x_distance).atan();
+    angle = (y_distance/x_distance).atan();
 
-        start_y = -angle.sin()*half_of_line;
-        start_x = -angle.cos()*half_of_line;
-
-    }else {
-        println!("other angle");
-        angle = (y_distance/x_distance).atan();
-
-        start_y = -angle.sin()*half_of_line;
-        start_x = -angle.cos()*half_of_line;
-    }
+    start_y = -angle.sin()*half_of_line;
+    start_x = -angle.cos()*half_of_line;
 
     
     println!("width {} hieght {}", width, height);
@@ -267,7 +248,7 @@ fn get_line_data(values: &Values) -> (f32, f32, f32, f32){
 
     return (start_x, start_y, angle, line_length);
 }
-fn test(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>,
+fn make_spheres(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>,
         values: Res<Values>){
 
     let x_origin = -300.0;
@@ -310,12 +291,14 @@ fn test(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials:
     });
     
 }
+//calculates scale
+//for example: 1 unit on the graph is 10 pixels
+//the scale is determined by the biggest value in the vec
+fn get_scale(values: &Vec<f32>) -> f32{
 
-fn get_scale(x_values: &Vec<f32>) -> f32{
+    let mut biggest = values[0];
 
-    let mut biggest = x_values[0];
-
-    for value in x_values.iter(){
+    for value in values.iter(){
         
         if *value > biggest{
             biggest = *value;
