@@ -23,3 +23,7 @@ Bevy @version "0.13.2"
 - The program uses the same technique to determine the scaling for the y axis
 
 ### Positioning in Bevy
+- Bevy places all objects at (0, 0)
+- (0, 0) is the middle of the screen
+- Bevy also rotates all objects by the center
+- Most of the complexity of this project came from how Bevy centers objects in the middle and the scaling. 
