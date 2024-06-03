@@ -14,5 +14,6 @@ Bevy @version "0.13.2"
 - Using this information to add the line to the graph
 - Graph the points
 
-### Specifics of the code
-stuff
+## Specifics of the code
+### Scaling
+-stuff
