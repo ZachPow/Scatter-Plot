@@ -16,10 +16,10 @@ Bevy @version "0.13.2"
 
 ## Specifics of the code
 ### Scaling
--this program scales the ratio of pixel to units on the graph
--orignally the scaling is a 1:1 ratio meaning the point (2, 5) is only a couple pixels away from the origin of the graph
--to fix this the program determines an appropriate scaling. Addionally the program scales the y and x axis seperately
--the program takes the total width of the graph (600 pixels) and divides it by the largest x value. Example: if 10 was the largest x value the x scaling would be set to 60 and that point would be shifted 600 pixels to the right but would represent only 10 units on the graph. This would make the ratio of pixels to graph units 60:1 
--the program uses the same technique to determine the scaling for the y axis
+- This program scales the ratio of pixel to units on the graph
+- Orignally the scaling is a 1:1 ratio meaning the point (2, 5) is only a couple pixels away from the origin of the graph
+- To fix this the program determines an appropriate scaling. Addionally the program scales the y and x axis seperately
+- The program takes the total width of the graph (600 pixels) and divides it by the largest x value. Example: if 10 was the largest x value the x scaling would be set to 60 and that point would be shifted 600 pixels to the right but would represent only 10 units on the graph. This would make the ratio of pixels to graph units 60:1 
+- The program uses the same technique to determine the scaling for the y axis
 
 ### Positioning in Bevy
